@@ -33,6 +33,12 @@ async function downloadYoutubeAudio (youtubeurl) {
 	})
 }
 
+
+app.get('/', (req, res) => {
+	res.send('test')
+})
+
+// Convert Youtube Video
 app.post('/convert', async (req, res) => {
 	const { youtube_url, media_type } = req.body
 	let file
@@ -45,7 +51,7 @@ app.post('/convert', async (req, res) => {
 		res.send({ type: 'video' })
 	}
 })
-
+// Download Video
 app.get('/download', async (req, res) => {
 	const { type } = req.query
 	if (type == 'audio') {
