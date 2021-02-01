@@ -3,6 +3,7 @@ const ytdl = require('ytdl-core')
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const ffmpeg = require('fluent-ffmpeg')
 const app = express()
 app.use(express.json())
 app.use(cors())
@@ -16,22 +17,36 @@ async function downloadYoutubeVideo (youtubeurl) {
 	stream.pipe(ws)
 	return new Promise(resolve => {
 		stream.on('end', () => {
+			console.log('done downloading')
 			resolve(filename)
 		})
 	})
 }
 
-async function downloadYoutubeAudio (youtubeurl) {
-	const stream = ytdl(youtubeurl, { filter: 'audioonly' })
-	const filename = 'audio.mp3'
-	const ws = fs.createWriteStream(filename)
-	stream.pipe(ws)
+function getAudio () {
 	return new Promise(resolve => {
-		stream.on('end', () => {
-			resolve(filename)
-		})
+		ffmpeg('video.mp4')
+			.output('audio.mp3')
+			.on('end', () => {
+				resolve(true)
+			})
+			.run()
 	})
+	
 }
+
+
+
+
+
+async function dowanloadYoutubeAudio (youtube_url) {
+	const res = await downloadYoutubeVideo(youtube_url)
+	const done = await getAudio()
+	return done
+}
+
+
+
 
 
 app.get('/', (req, res) => {
@@ -44,7 +59,7 @@ app.post('/convert', async (req, res) => {
 	let file
 	console.log(req.body)
 	if (media_type == 'audio') {
-		file = await downloadYoutubeAudio(youtube_url)
+		file = await dowanloadYoutubeAudio(youtube_url)
 		res.send({ type: 'audio' })
 	} else {
 		file = await downloadYoutubeVideo(youtube_url)
@@ -61,6 +76,3 @@ app.get('/download', async (req, res) => {
 	}
 })
 const port = process.env.PORT || 4000
-app.listen(port, () => {
-	console.log('server startedd')
-})
